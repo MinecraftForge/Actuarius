@@ -7,8 +7,8 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import com.electronwill.nightconfig.core.file.FileConfig;
 
-import discord4j.core.ClientBuilder;
 import discord4j.core.DiscordClient;
+import discord4j.core.DiscordClientBuilder;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.util.Snowflake;
@@ -23,7 +23,6 @@ import reactor.core.publisher.Mono;
 
 public class Main extends CommandTree {
     
-    @SuppressWarnings("null")
     public static final FileConfig config = FileConfig.builder("actuarius.toml").defaultResource("/default_config.toml").autosave().build();
 
     public static void main(String[] unused) throws IOException {
@@ -39,7 +38,7 @@ public class Main extends CommandTree {
         
         Hooks.onOperatorDebug();
         
-        DiscordClient client = new ClientBuilder(token).build();
+        DiscordClient client = new DiscordClientBuilder(token).build();
         
         CommandTree rootCommand = new Main();
         rootCommand
@@ -61,7 +60,7 @@ public class Main extends CommandTree {
             .withNode("info", new CommandRepoInfo())
             .withNode("label", new CommandLabel());
         
-        client.getEventDispatcher().on(MessageCreateEvent.class)
+        Mono<Void> commandResults = client.getEventDispatcher().on(MessageCreateEvent.class)
                 
             // Find all messages mentioning us
             .filterWhen(e -> e.getMessage().getUserMentions().next().map(u -> client.getSelfId().map(u.getId()::equals).orElse(false)))
@@ -72,17 +71,20 @@ public class Main extends CommandTree {
             .filter(e -> e.getGuildId().isPresent())
             .map(Context::new)
             .flatMap(ctx -> {
-                try {
-                    return rootCommand.invoke(ctx);
-                } catch (Exception e1) {
-                    // Generic error handling, can be improved
-                    return ctx.getChannel().map(c -> c.createMessage(spec -> spec.setContent(e1.getMessage())));
+                try { 
+                    return rootCommand.invoke(ctx)
+                        .onErrorResume(CommandException.class, e -> ctx.reply("Could not process command: " + e.getMessage()).then(Mono.empty()))
+                        .onErrorResume(e -> ctx.reply("Unexpected error: " + e).then(Mono.empty()));
+                } catch (Exception e) {
+                    return ctx.reply("Unexpected error: " + e);
                 }
             })
-            .subscribe();
-
+            .then();
+        
         // block() is required to prevent the VM exiting prematurely
-        client.login().block();
+        client.login()
+              .and(commandResults)
+              .block();
     }
     
     private static Mono<Boolean> isMentionFirst(Snowflake id, Message message) {

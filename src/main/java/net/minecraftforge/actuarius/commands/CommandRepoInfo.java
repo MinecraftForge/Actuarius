@@ -5,8 +5,6 @@ import java.io.IOException;
 import org.kohsuke.github.GHPerson;
 import org.kohsuke.github.GHRepository;
 
-import discord4j.core.object.entity.Member;
-import discord4j.core.object.entity.MessageChannel;
 import net.minecraftforge.actuarius.util.GithubUtil;
 import reactor.core.publisher.Mono;
 
@@ -22,7 +20,7 @@ public class CommandRepoInfo implements Command {
         } else if (args.length == 1) {
             repo = args[0];
         } else {
-            throw new CommandException("Wrong number of arguments.");
+            return ctx.error("Wrong number of arguments.");
         }
         
         try {
@@ -35,14 +33,14 @@ public class CommandRepoInfo implements Command {
             }
             
             if (org == null) {
-                throw new CommandException("No such user.");
+                return ctx.error("No such user.");
             }
             GHRepository repository = org.getRepository(repo);
             if (repository == null) {
-                throw new CommandException("No such repository.");
+                return ctx.error("No such repository.");
             }
             
-            return ctx.getChannel().flatMap(c -> c.createMessage(spec -> spec.setEmbed(embed -> {
+            return ctx.reply(embed -> {
                 embed.setTitle(repository.getOwnerName() + "/" + repository.getName());
                 String desc = repository.getDescription();
                 if (desc != null) {
@@ -50,10 +48,10 @@ public class CommandRepoInfo implements Command {
                 }
                 embed.addField("Open Issues/PRs", String.valueOf(repository.getOpenIssueCount()), true);
                 embed.addField("Stars", String.valueOf(repository.getStargazersCount()), true);
-            })));
+            });
         } catch (IOException e) {
             e.printStackTrace();
-            throw new CommandException("Error getting repository info.", e);
+            return ctx.error("Error getting repository info.", e);
         }
     }
 

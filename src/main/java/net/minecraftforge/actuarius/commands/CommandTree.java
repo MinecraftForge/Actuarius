@@ -22,13 +22,13 @@ public class CommandTree implements Command {
     }
     
     @Override
-    public Mono<?> invoke(Context ctx) throws CommandException {
+    public Mono<?> invoke(Context ctx) {
         if (ctx.getArgs().length == 0) {
-            throw new CommandException("Not enough arguments.");
+            return ctx.error("Not enough arguments.");
         }
         Command subCommand = getSubcommand(ctx.getArgs()[0]);
         if (subCommand == null) {
-            throw new CommandException("No known sub-command: " + ctx.getArgs()[0]);
+            return ctx.error("No known sub-command: " + ctx.getArgs()[0]);
         }
         return subCommand.invoke(ctx.stripArgs(1));
     }

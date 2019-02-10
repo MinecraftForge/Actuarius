@@ -1,7 +1,7 @@
 package net.minecraftforge.actuarius.commands;
 
 
-public class CommandException extends Exception {
+public class CommandException extends RuntimeException {
 
     private static final long serialVersionUID = 7397025139691342944L;
     
@@ -9,11 +9,11 @@ public class CommandException extends Exception {
         super(msg);
     }
     
-    public CommandException(Exception cause) {
+    public CommandException(Throwable cause) {
         super(cause.getMessage(), cause);
     }
 
-    public CommandException(String msg, Exception cause) {
+    public CommandException(String msg, Throwable cause) {
         super(msg, cause);
     }
 }

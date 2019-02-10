@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.util.Optional;
 
 import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.HttpException;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import net.minecraftforge.actuarius.util.GHInstallation;
 import net.minecraftforge.actuarius.util.GHInstallation.NoSuchInstallationException;
@@ -28,12 +31,12 @@ public class CommandLabel implements Command {
                 try {
                     installation = GHInstallation.repo(args[0], args[1]);
                 } catch (NoSuchInstallationException e2) {
-                    throw new CommandException("No such repository, or no installation on that repository.", e);
+                    return ctx.error("No such repository, or no installation on that repository.", e);
                 } catch (ArrayIndexOutOfBoundsException e2) {
-                    throw new CommandException("Not enough arguments");
+                    return ctx.error("Not enough arguments");
                 }
             } catch (ArrayIndexOutOfBoundsException e1) {
-                throw new CommandException("Not enough arguments");
+                return ctx.error("Not enough arguments");
             }
         }
         
@@ -50,18 +53,24 @@ public class CommandLabel implements Command {
             ctx = ctx.stripArgs(2);
         }
         
-        if (!PermissionUtil.canAccess(ctx.getAuthor(), repoName)) {
-            throw new CommandException("No permission to access that repository.");
+        if (!PermissionUtil.canAccess(ctx.getMember().block(), repoName)) {
+            return ctx.error("No permission to access that repository.");
         }
         
         try {
             GHRepository repo = installation.getClient().getRepository(repoName);
-            repo.getIssue(1).setLabels(args);
+            repo.getIssue(1).setLabels(ctx.getArgs());
+        } catch (HttpException e) {
+            try {
+                return ctx.error(new ObjectMapper().readTree(e.getMessage()).get("message").asText());
+            } catch (IOException e1) {
+                return ctx.error(e1);
+            }
         } catch (IOException e) {
-            throw new CommandException(e);
+            return ctx.error(e);
         }
         
-        return ctx.getChannel().flatMap(c -> c.createMessage(spec -> spec.setContent("Labels updated")));
+        return ctx.reply("Labels updated");
     }
 
 }

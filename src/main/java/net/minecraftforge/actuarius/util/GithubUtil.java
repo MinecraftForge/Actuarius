@@ -13,6 +13,7 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -148,6 +149,7 @@ public class GithubUtil {
             
             // Use 9 minutes here, because 10 minutes is the limit and 
             // may be too long if local time is ahead of server time.
+            Instant.now().plus(9, ChronoUnit.MINUTES);
             Date expiry = new Date(now.getTime() + TimeUnit.MINUTES.toMillis(9));
             jwtExpiry = expiry.toInstant();
     
