@@ -5,8 +5,6 @@ import java.security.Security;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-import com.electronwill.nightconfig.core.file.FileConfig;
-
 import discord4j.core.DiscordClient;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.event.domain.message.MessageCreateEvent;
@@ -18,19 +16,23 @@ import net.minecraftforge.actuarius.commands.CommandLabel;
 import net.minecraftforge.actuarius.commands.CommandRepoInfo;
 import net.minecraftforge.actuarius.commands.CommandTree;
 import net.minecraftforge.actuarius.commands.Context;
+import net.minecraftforge.actuarius.config.ConfigData;
+import net.minecraftforge.actuarius.config.ConfigReader;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 
 public class Main extends CommandTree {
     
-    public static final FileConfig config = FileConfig.builder("actuarius.toml").defaultResource("/default_config.toml").autosave().build();
+    public static ConfigData cfg = new ConfigData();
 
     public static void main(String[] unused) throws IOException {
         Security.addProvider(new BouncyCastleProvider());
 
-        config.load();
+        ConfigReader cfgReader = new ConfigReader();
+        cfgReader.load();
+        cfg = cfgReader.getData();
         
-        String token = config.get("discord.token");
+        String token = cfg.discord.token;
        
         if (token == null) {
             throw new IllegalArgumentException("No token provided.");

@@ -42,7 +42,7 @@ public class CommandLabel implements Command {
         
         Optional<String> defaultInstallation = GithubUtil.defaultInstallation();
         String repoName;
-        if (defaultInstallation.isPresent() && GithubUtil.forceDefault()) {
+        if (defaultInstallation.isPresent() && (GithubUtil.forceDefault() || args.length < 2)) {
             repoName = defaultInstallation.get();
             if (repoName.indexOf('/') < 0) {
                 repoName += args[0];

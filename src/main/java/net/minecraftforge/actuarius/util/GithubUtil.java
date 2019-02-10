@@ -60,11 +60,11 @@ public class GithubUtil {
     
     @SuppressWarnings("null")
     public static Optional<String> defaultInstallation() {
-        return Optional.ofNullable(Main.config.get("github.default_installation"));
+        return Optional.ofNullable(Main.cfg.github.defaultInstallation);
     }
     
     public static boolean forceDefault() {
-        return Optional.ofNullable(Main.config.<Boolean>get("github.force_default")).orElse(false);
+        return Main.cfg.github.forceDefault;
     }
     
     @SuppressWarnings("null")
@@ -142,7 +142,7 @@ public class GithubUtil {
     static String getJWT() {
         
         if (jwt == null || jwtExpiry.isBefore(Instant.now())) {
-            RSAPrivateKey key = getPrivateKey(Main.config.get("github.private_key"));
+            RSAPrivateKey key = getPrivateKey(Main.cfg.github.privateKey);
     
             Algorithm algorithm = Algorithm.RSA256(null, key);
             Date now = new Date();
@@ -154,7 +154,7 @@ public class GithubUtil {
             jwtExpiry = expiry.toInstant();
     
             jwt = JWT.create()
-                    .withIssuer(Main.config.<Integer>get("github.app_id").toString())
+                    .withIssuer(String.valueOf(Main.cfg.github.appId))
                     .withIssuedAt(now)
                     .withExpiresAt(expiry) 
                     .sign(algorithm);

@@ -7,6 +7,7 @@ import com.electronwill.nightconfig.core.Config;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.util.Snowflake;
 import net.minecraftforge.actuarius.Main;
+import net.minecraftforge.actuarius.config.PermissionEntry;
 import reactor.util.annotation.Nullable;
 
 public class PermissionUtil {
@@ -22,11 +23,11 @@ public class PermissionUtil {
     
     private static @Nullable List<String> getRepos(Snowflake id) {
         
-        List<Config> grants = Main.config.<List<Config>>get("grants");
+        List<PermissionEntry> grants = Main.cfg.grants;
         
-        for (Config grant : grants) {
-            if (grant.<Long>get("id") == id.asLong()) {
-                return grant.<List<String>>get("repos");
+        for (PermissionEntry grant : grants) {
+            if (grant.id == id.asLong()) {
+                return grant.repos;
             }
         }
         return null;
